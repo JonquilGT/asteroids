@@ -1,9 +1,13 @@
-from turtle import update
-
+from turtle import up, update
+from logger import log_event
+from asteroid import Asteroid
 from player import Player
+from shot import Shot
 import pygame
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from logger import log_state
+from asteroidfield import AsteroidField
+import sys
 
 def main():
     #Initialize pygame
@@ -23,13 +27,31 @@ def main():
     #Build groups
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
+    asteroids = pygame.sprite.Group()
+    shots = pygame.sprite.Group()
     Player.containers = (updatable, drawable)
+    Asteroid.containers = (updatable, drawable, asteroids)
+    AsteroidField.containers = (updatable)
+    Shot.containers = (shots, updatable, drawable)
+
 
     #Build Player
     hero = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+    asteroidfield = AsteroidField()
 
     while True:
         updatable.update(dt)
+        for asteroid in asteroids:
+            if hero.collides_with(asteroid):
+                log_event("player_hit")
+                print("Game over!")
+                sys.exit()
+        for asteroid in asteroids:
+            for shot in shots:
+                if shot.collides_with(asteroid):
+                    log_event("asteroid_shot")
+                    shot.kill()
+                    asteroid.split()
         log_state()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
